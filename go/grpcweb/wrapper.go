@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -294,6 +295,10 @@ func hackIntoNormalGrpcRequest(req *http.Request) (*http.Request, bool) {
 	// DATA frame payload lengths. https://http2.github.io/http2-spec/#malformed This effectively
 	// switches to chunked encoding which is the default for h2
 	req.Header.Del("content-length")
+
+	// transparent client ip to upstream grpc server
+	host, _, _ := net.SplitHostPort(req.RemoteAddr)
+	req.Header.Set("X-Forwarded-For", host)
 
 	return req, isTextFormat
 }
